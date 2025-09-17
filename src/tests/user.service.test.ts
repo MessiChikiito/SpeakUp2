@@ -77,7 +77,7 @@ describe("Pruebas de UserApplicationService", () => {
   });
 
   // ✅ Login exitoso
-  test("Debe iniciar sesión con credenciales válidas y devolver token", async () => {
+  test("Debe iniciar sesión con credenciales válidas y devolver token y usuario", async () => {
     const mockUser = {
       id: 1,
       username: "tester",
@@ -93,9 +93,11 @@ describe("Pruebas de UserApplicationService", () => {
     (bcrypt.compare as jest.Mock).mockResolvedValue(true);
     (AuthApplication.generateToken as jest.Mock).mockReturnValue("fake-jwt-token");
 
-    const token = await service.login("tester@mail.com", "123456");
+    const result = await service.login("tester@mail.com", "123456");
 
-    expect(token).toBe("fake-jwt-token");
+    expect(result.token).toBe("fake-jwt-token");
+    expect(result.user.email).toBe("tester@mail.com");
+    expect(result.user.username).toBe("tester");
     expect(bcrypt.compare).toHaveBeenCalledWith("123456", "hashed123");
   });
 

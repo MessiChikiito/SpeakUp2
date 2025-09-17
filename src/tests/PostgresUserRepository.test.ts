@@ -1,17 +1,25 @@
 import { UserAdapter } from "../infrastructure/adapter/UserAdapter";
-
 import { AppDataSource } from "../infrastructure/config/database";
+import { UserEntity } from "../infrastructure/entities/UserEntity";
 
 jest.mock("../infrastructure/config/database", () => ({
-  pool: {
-    query: jest.fn(),
+  AppDataSource: {
+    getRepository: jest.fn(),
   },
 }));
 
 describe("UserAdapter", () => {
   let repo: UserAdapter;
+  let mockRepo: any;
 
   beforeEach(() => {
+    // Mock del repositorio de TypeORM
+    mockRepo = {
+      findOne: jest.fn(),
+    };
+
+    (AppDataSource.getRepository as jest.Mock).mockReturnValue(mockRepo);
+
     repo = new UserAdapter();
   });
 
@@ -19,21 +27,17 @@ describe("UserAdapter", () => {
     jest.clearAllMocks();
   });
 
-  test("getUserByEmail debería retornar un UserEntity con rolNombre", async () => {
-    (AppDataSource.query as jest.Mock).mockResolvedValueOnce({
-      rows: [
-        {
-          id: 1,
-          username: "usuario1",
-          password_hash: "hashedpwd",
-          rol_id: 2,
-          status: 1,
-          email: "usuario1@test.com",
-          created_at: new Date(),
-          updated_at: new Date(),
-          rol_nombre: "Admin",
-        },
-      ],
+  test("getUserByEmail debería retornar un User con rolNombre", async () => {
+    mockRepo.findOne.mockResolvedValueOnce({
+      id: 1,
+      username: "usuario1",
+      email: "usuario1@test.com",
+      passwordHash: "hashedpwd",
+      rolId: 2,
+      status: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      rolNombre: "Admin",
     });
 
     const user = await repo.getUserByEmail("usuario1@test.com");
@@ -42,15 +46,11 @@ describe("UserAdapter", () => {
     expect(user?.username).toBe("usuario1");
     expect(user?.rolNombre).toBe("Admin");
 
-    // Verificamos que pool.query se llamó con el SQL correcto
-    expect(AppDataSource.query).toHaveBeenCalledWith(
-      expect.stringContaining("JOIN roles"),
-      ["usuario1@test.com"]
-    );
+    expect(mockRepo.findOne).toHaveBeenCalledWith({ where: { email: "usuario1@test.com" } });
   });
 
   test("getUserByEmail debería retornar null si no existe usuario", async () => {
-    (AppDataSource.query as jest.Mock).mockResolvedValueOnce({ rows: [] });
+    mockRepo.findOne.mockResolvedValueOnce(null);
 
     const user = await repo.getUserByEmail("noexiste@test.com");
     expect(user).toBeNull();

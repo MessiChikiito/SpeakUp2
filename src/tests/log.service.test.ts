@@ -1,28 +1,43 @@
-import { LogService } from "../application/log/LogApplicationService";
-import { ILogRepository } from "../domain/log/LogPort";
+import { LogApplicationService } from "../application/log/LogApplicationService";
+import { LogPort } from "../domain/log/LogPort";
 import { LogEntity } from "../infrastructure/entities/LogEntity";
 
-describe("Pruebas de LogService", () => {
-  let mockRepo: ILogRepository;
-  let service: LogService;
+describe("Pruebas de LogApplicationService", () => {
+  let mockRepo: jest.Mocked<LogPort>;
+  let service: LogApplicationService;
 
   beforeEach(() => {
     mockRepo = {
-      findAll: jest.fn(),
-      findById: jest.fn(),
-      create: jest.fn(),
-      delete: jest.fn(),
+      createLog: jest.fn(),
+      deleteLog: jest.fn(),
+      getLogById: jest.fn(),
+      getAllLogs: jest.fn(),
     };
-    service = new LogService(mockRepo);
+    service = new LogApplicationService(mockRepo);
   });
 
   test("Debe registrar un log correctamente", async () => {
-    const mockLog = new LogEntity(1, 5, "Creación de usuario", "usuarios");
-    (mockRepo.create as jest.Mock).mockResolvedValue(mockLog);
+    const mockLog = {
+      id: 1,
+      usuarioId: 5,
+      accion: "Creación de usuario",
+      entidad: "usuarios",
+      fecha: new Date(),
+    } as LogEntity;
 
-    const log = await service.registrar(5, "Creación de usuario", "usuarios");
+    (mockRepo.createLog as jest.Mock).mockResolvedValue(1); // retorna id del log creado
+    (mockRepo.getLogById as jest.Mock).mockResolvedValue(mockLog);
 
-    expect(log.accion).toBe("Creación de usuario");
-    expect(mockRepo.create).toHaveBeenCalledTimes(1);
+    const id = await service.createLog({
+      usuarioId: 5,
+      accion: "Creación de usuario",
+      entidad: "usuarios",
+    });
+
+    expect(id).toBe(1);
+    expect(mockRepo.createLog).toHaveBeenCalledTimes(1);
+
+    const log = await service.getLogById(1);
+    expect(log?.accion).toBe("Creación de usuario");
   });
 });

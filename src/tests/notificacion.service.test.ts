@@ -3,7 +3,7 @@ import { INotificacionRepository } from "../domain/notificaciones/INotificacionR
 import { NotificacionEntity } from "../infrastructure/entities/NotificacionEntity";
 
 describe("Pruebas de NotificacionApplicationService", () => {
-  let mockRepo: INotificacionRepository;
+  let mockRepo: jest.Mocked<INotificacionRepository>;
   let service: NotificacionApplicationService;
 
   beforeEach(() => {
@@ -18,7 +18,15 @@ describe("Pruebas de NotificacionApplicationService", () => {
   });
 
   test("Debe crear una notificación no leída", async () => {
-    const mockNotificacion = new NotificacionEntity(1, 2, 3, "Revisar denuncia", false, new Date());
+    const mockNotificacion = {
+      id: 1,
+      denunciaId: 2,
+      moderadorId: 3,
+      mensaje: "Revisar denuncia",
+      leido: false,
+      createdAt: new Date(),
+    } as NotificacionEntity;
+
     (mockRepo.create as jest.Mock).mockResolvedValue(mockNotificacion);
 
     const notificacion = await service.create(2, 3, "Revisar denuncia");

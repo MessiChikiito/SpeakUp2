@@ -1,38 +1,58 @@
+import { CategoriaApplicationService } from "../application/categoria/CategoriaApplicationService";
 import { ICategoriaRepository } from "../domain/categoria/ICategoriaRepository";
 import { CategoriaEntity } from "../infrastructure/entities/CategoriaEntity";
 
-class CategoriaService {
-  constructor(private categoriaRepository: ICategoriaRepository) {}
-
-  async createCategoria(nombre: string, descripcion: string) {
-    const categoria = new CategoriaEntity(0, nombre, descripcion, 1, new Date(), new Date());
-    return await this.categoriaRepository.create(categoria);
-  }
-}
-
-describe("Pruebas de CategoriaService", () => {
-  let mockRepo: ICategoriaRepository;
-  let service: CategoriaService;
+describe("Pruebas de CategoriaApplicationService", () => {
+  let mockRepo: jest.Mocked<ICategoriaRepository>;
+  let service: CategoriaApplicationService;
 
   beforeEach(() => {
     mockRepo = {
-      findAll: jest.fn(),
-      findById: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
+      createCategoria: jest.fn(),
+      updateCategoria: jest.fn(),
+      deleteCategoria: jest.fn(),
+      getCategoriaById: jest.fn(),
+      getAllCategorias: jest.fn(),
     };
-    service = new CategoriaService(mockRepo);
+    service = new CategoriaApplicationService(mockRepo);
   });
 
   test("Debe crear una categoría activa", async () => {
-    const mockCategoria = new CategoriaEntity(1, "Seguridad", "Casos de seguridad", 1, new Date(), new Date());
-    (mockRepo.create as jest.Mock).mockResolvedValue(mockCategoria);
+    // Simulamos que el repo devuelve el id de la nueva categoría
+    (mockRepo.createCategoria as jest.Mock).mockResolvedValue(1);
 
-    const categoria = await service.createCategoria("Seguridad", "Casos de seguridad");
+    const id = await service.createCategoria({
+      nombre: "Seguridad",
+      descripcion: "Casos de seguridad",
+    });
 
-    expect(categoria.nombre).toBe("Seguridad");
-    expect(categoria.status).toBe(1);
-    expect(mockRepo.create).toHaveBeenCalledTimes(1);
+    expect(id).toBe(1);
+    expect(mockRepo.createCategoria).toHaveBeenCalledWith({
+      nombre: "Seguridad",
+      descripcion: "Casos de seguridad",
+      status: 1,
+    });
+    expect(mockRepo.createCategoria).toHaveBeenCalledTimes(1);
+  });
+
+  test("Debe obtener todas las categorías", async () => {
+    const categorias = [
+      {
+        id: 1,
+        nombre: "Seguridad",
+        descripcion: "Casos de seguridad",
+        status: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ] as CategoriaEntity[];
+
+    (mockRepo.getAllCategorias as jest.Mock).mockResolvedValue(categorias);
+
+    const result = await service.getAllCategorias();
+
+    expect(result.length).toBe(1);
+    expect(result[0].nombre).toBe("Seguridad");
+    expect(mockRepo.getAllCategorias).toHaveBeenCalledTimes(1);
   });
 });

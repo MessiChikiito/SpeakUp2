@@ -113,21 +113,6 @@ INSERT INTO roles (nombre_rol, descripcion_rol, status_rol) VALUES
 INSERT INTO roles (nombre_rol, descripcion_rol, status_rol) VALUES
   ('Admin', 'Administrador', 1) ON CONFLICT DO NOTHING;
 
-
-INSERT INTO usuarios (id, username, email, password_hash, rol_id, status)
-SELECT 1, 'admin', 'admin@example.com', '$2b$10$reemplazar_hash_bcrypt', r.id_rol, 1
-FROM roles r
-WHERE r.nombre_rol = 'Admin'
-ON CONFLICT (username) DO NOTHING;
-
--- Usuarios de prueba
-INSERT INTO usuarios (id, username, email, password_hash, rol_id, status)
-SELECT 2, 'messi1', 'messi1@gmail.com', '$2b$10$w1Qw1Qw1Qw1Qw1Qw1Qw1Qe1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Q', r.id_rol, 1
-FROM roles r WHERE r.nombre_rol = 'Usuario' ON CONFLICT (username) DO NOTHING;
-INSERT INTO usuarios (id, username, email, password_hash, rol_id, status)
-SELECT 3, 'prueba1', 'prueba1@gmail.com', '$2b$10$w2Qw2Qw2Qw2Qw2Qw2Qw2Qe2Qw2Qw2Qw2Qw2Qw2Qw2Qw2Qw2Qw2Q', r.id_rol, 1
-FROM roles r WHERE r.nombre_rol = 'Usuario' ON CONFLICT (username) DO NOTHING;
-
 -- datos Categorías
 INSERT INTO categorias (id, nombre) VALUES
   (1, 'Corrupción'),
@@ -141,17 +126,3 @@ INSERT INTO categorias (id, nombre) VALUES
   (9, 'Salud'),
   (10, 'Transparencia')
 ON CONFLICT (id) DO NOTHING;
-
--- Denuncias de prueba para messi1 (usuario_id=2)
-INSERT INTO denuncias (titulo, descripcion, categoria_id, gravedad, ubicacion, estado, usuario_id)
-VALUES
-('Corrupción en licitación', 'Se detectó corrupción en la licitación de obras públicas.', 1, 4, 'Oficina municipal', 'pendiente', 2),
-('Negligencia médica', 'Caso de negligencia en hospital local.', 3, 3, 'Hospital/Centro de salud', 'pendiente', 2),
-('Acoso laboral', 'Empleado reporta acoso por parte de su jefe.', 7, 2, 'Institución educativa', 'pendiente', 2);
-
--- Denuncias de prueba para prueba1 (usuario_id=3)
-INSERT INTO denuncias (titulo, descripcion, categoria_id, gravedad, ubicacion, estado, usuario_id)
-VALUES
-('Fraude financiero', 'Sospecha de fraude en cuentas municipales.', 4, 4, 'Oficina municipal', 'pendiente', 3),
-('Discriminación en transporte', 'Discriminación a usuario en transporte público.', 5, 1, 'Transporte público', 'pendiente', 3),
-('Problemas ambientales', 'Contaminación en parque local.', 6, 2, 'Espacio público', 'pendiente', 3);
