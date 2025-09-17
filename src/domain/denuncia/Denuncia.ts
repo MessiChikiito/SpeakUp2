@@ -7,4 +7,7 @@ export interface Denuncia {
     estado: "pendiente" | "validada" | "rechazada";
     fechaCreacion: Date;
     fechaActualizacion?: Date;
+    score?: number;
+    upCount?: number;
+    downCount?: number;
 }

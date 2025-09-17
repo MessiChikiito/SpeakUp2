@@ -1,0 +1,123 @@
+-- Opcional: crear base
+-- CREATE DATABASE speakup;
+-- \c speakup;
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Roles / Perfiles de usuario
+CREATE TABLE rol (
+  id SERIAL PRIMARY KEY,
+  nombre VARCHAR(50) NOT NULL UNIQUE,
+  descripcion TEXT
+);
+
+-- Usuarios
+CREATE TABLE "user" (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  username VARCHAR(60) NOT NULL UNIQUE,
+  email VARCHAR(120) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  role_id INTEGER REFERENCES rol(id) ON DELETE SET NULL,
+  creado_en TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+  actualizado_en TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_role ON "user"(role_id);
+
+-- Categorías
+CREATE TABLE categoria (
+  id SERIAL PRIMARY KEY,
+  nombre VARCHAR(120) NOT NULL UNIQUE,
+  descripcion TEXT,
+  creado_en TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+  actualizado_en TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+);
+
+-- Denuncias
+CREATE TABLE denuncia (
+  id SERIAL PRIMARY KEY,
+  titulo VARCHAR(200) NOT NULL,
+  descripcion TEXT NOT NULL,
+  categoria_id INTEGER REFERENCES categoria(id) ON DELETE SET NULL,
+  gravedad SMALLINT NOT NULL CHECK (gravedad BETWEEN 1 AND 4),
+  ubicacion VARCHAR(80),
+  estado VARCHAR(30) NOT NULL DEFAULT 'pendiente',  -- 'pendiente','validado','rechazado','revision'
+  user_id UUID REFERENCES "user"(id) ON DELETE SET NULL,
+  score INTEGER NOT NULL DEFAULT 0,
+  up_count INTEGER NOT NULL DEFAULT 0,
+  down_count INTEGER NOT NULL DEFAULT 0,
+  last_score_update TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_denuncia_categoria ON denuncia(categoria_id);
+CREATE INDEX idx_denuncia_user ON denuncia(user_id);
+CREATE INDEX idx_denuncia_score ON denuncia(score DESC);
+CREATE INDEX idx_denuncia_created ON denuncia(created_at DESC);
+
+-- Tabla de votos (composite PK)
+CREATE TABLE denuncia_vote (
+  denuncia_id INTEGER NOT NULL REFERENCES denuncia(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  value SMALLINT NOT NULL CHECK (value IN (-1, 1)),
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+  PRIMARY KEY (denuncia_id, user_id)
+);
+
+CREATE INDEX idx_denuncia_vote_user ON denuncia_vote(user_id);
+CREATE INDEX idx_denuncia_vote_value ON denuncia_vote(value);
+
+-- Logs
+CREATE TABLE log (
+  id BIGSERIAL PRIMARY KEY,
+  tipo VARCHAR(40) NOT NULL,     -- e.g. 'auth','error','action'
+  mensaje TEXT NOT NULL,
+  meta JSONB,
+  user_id UUID REFERENCES \"user\"(id) ON DELETE SET NULL,
+  creado_en TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_log_tipo ON log(tipo);
+CREATE INDEX idx_log_user ON log(user_id);
+
+-- Notificaciones (si las usas)
+CREATE TABLE notificacion (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID REFERENCES \"user\"(id) ON DELETE CASCADE,
+  titulo VARCHAR(150) NOT NULL,
+  cuerpo TEXT,
+  leida BOOLEAN NOT NULL DEFAULT FALSE,
+  creada_en TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_notificacion_user ON notificacion(user_id);
+CREATE INDEX idx_notificacion_leida ON notificacion(leida);
+
+-- Disparadores (opcional) para updated_at
+CREATE OR REPLACE FUNCTION touch_updated_at() RETURNS trigger AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_denuncia_updated
+BEFORE UPDATE ON denuncia
+FOR EACH ROW
+EXECUTE PROCEDURE touch_updated_at();
+
+-- Roles seed
+INSERT INTO rol (nombre, descripcion) VALUES
+  ('usuario', 'Usuario estándar') ON CONFLICT DO NOTHING;
+INSERT INTO rol (nombre, descripcion) VALUES
+  ('admin', 'Administrador') ON CONFLICT DO NOTHING;
+
+-- Usuario admin seed (cambia el hash luego)
+-- password_hash debería ser un bcrypt real
+INSERT INTO \"user\" (username, email, password_hash, role_id)
+SELECT 'admin', 'admin@example.com', '$2b$10$reemplazar_hash_bcrypt', r.id
+FROM rol r
+WHERE r.nombre = 'admin'
+ON CONFLICT (username) DO NOTHING;

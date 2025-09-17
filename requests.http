@@ -1,0 +1,150 @@
+### Variables
+@TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzAsImVtYWlsIjoicHJ1ZWJhMUBnbWFpbC5jb20iLCJyb2wiOjIsImlhdCI6MTc1ODA2MDM2NCwiZXhwIjoxNzU4MDYzOTY0fQ.rxz30snSYQuJOLMxIqoEjhTxO23stqdsi410IHioyDg
+
+### Autenticarse para obtener token
+# Ajusta el email y password a un usuario existente. Copia el token 'token' de la respuesta y reemplaza el valor de @TOKEN arriba.
+POST http://localhost:4000/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "prueba1@gmail.com",
+  "password": "prueba1L"
+}
+
+### Obtener mis denuncias (nuevo endpoint)
+GET http://localhost:4000/denuncias/misDenuncias
+Authorization: Bearer {{TOKEN}}
+
+
+### Crear denuncia
+POST http://localhost:4000/denuncias
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "titulo": "Bache peligroso",
+  "descripcion": "Hay un bache grande frente a la calle 123.",
+  "categoriaId": 1,
+  "ubicacion": "Calle 123",
+  "gravedad": 3
+}
+
+
+### Listar todas (según permisos)
+GET http://localhost:4000/denuncias
+Authorization: Bearer {{TOKEN}}
+
+
+### Obtener una denuncia por ID
+GET http://localhost:4000/denuncias/1
+Authorization: Bearer {{TOKEN}}
+
+### ------------------------------------------------------
+### VOTING / RANKING TESTS
+### ------------------------------------------------------
+
+### (1) Crear una denuncia de prueba para votar
+POST http://localhost:4000/denuncias
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "titulo": "Denuncia para pruebas de votos",
+  "descripcion": "Se usa para probar el endpoint /vote.",
+  "categoriaId": 1,
+  "ubicacion": "Zona Centro",
+  "gravedad": 2
+}
+
+### (2) Listar todas y localizar el ID recién creado
+GET http://localhost:4000/denuncias
+Authorization: Bearer {{TOKEN}}
+
+### (3) Upvote (value = 1)
+# Reemplaza :id por el ID de la denuncia que vas a probar
+POST http://localhost:4000/denuncias/1/vote
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "value": 1
+}
+
+### (4) Cambiar a downvote (value = -1)
+POST http://localhost:4000/denuncias/1/vote
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "value": -1
+}
+
+### (5) Quitar voto (unvote) (value = 0)
+POST http://localhost:4000/denuncias/1/vote
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "value": 0
+}
+
+### (6) Secuencia completa simulada
+# up -> down -> unvote -> up
+POST http://localhost:4000/denuncias/1/vote
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "value": 1
+}
+
+###
+POST http://localhost:4000/denuncias/1/vote
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "value": -1
+}
+
+###
+POST http://localhost:4000/denuncias/1/vote
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "value": 0
+}
+
+###
+POST http://localhost:4000/denuncias/1/vote
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "value": 1
+}
+
+### (7) Verificar la denuncia después de los votos (score / upCount / downCount)
+GET http://localhost:4000/denuncias/1
+Authorization: Bearer {{TOKEN}}
+
+### (8) (Opcional) Repetir con otro usuario para ver acumulación
+# Login con otro usuario, copia su token en @TOKEN y repite (3)-(7).
+
+### (9) Prueba de error: value inválido
+POST http://localhost:4000/denuncias/1/vote
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "value": 5
+}
+
+### (10) Prueba sin token (debe devolver 401)
+POST http://localhost:4000/denuncias/1/vote
+Content-Type: application/json
+
+{
+  "value": 1
+}

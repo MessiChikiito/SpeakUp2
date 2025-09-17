@@ -9,6 +9,10 @@ export interface DenunciaDTO {
   usuarioId?: number | null;
   createdAt: Date;
   updatedAt: Date;
+  score?: number;
+  upCount?: number;
+  downCount?: number;
+  userVote?: number;
 }
 
 export interface CreateDenunciaDTO {
@@ -16,10 +20,9 @@ export interface CreateDenunciaDTO {
   descripcion: string;
   categoriaId: number;
   ubicacion: string;
-  gravedad: number;
-  usuarioId?: number | null;
+  gravedad: number;  
+  usuarioId?: number; 
 }
-
 export interface UpdateDenunciaDTO {
   titulo?: string;
   descripcion?: string;
@@ -27,4 +30,6 @@ export interface UpdateDenunciaDTO {
   ubicacion?: string;
   gravedad?: number;
   estado?: string;
+  usuarioId?: number | null;
+  status?: number;
 }

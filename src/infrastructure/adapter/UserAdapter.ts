@@ -1,79 +1,68 @@
-import { Repository } from "typeorm";
-import { AppDataSource } from "../config/database";
-import { UserEntity } from "../entities/UserEntity";
-import { IUserRepository } from "../../domain/user/IUserRepository";
-import { User } from "../../domain/user/User";
-import { CreateUserDTO, UpdateUserDTO } from "../../application/user/dto/UserDTO";
+import { AppDataSource } from '../config/database';
+import { UserEntity } from '../entities/UserEntity';
+import { IUserRepository } from '../../domain/user/IUserRepository';
+import { User } from '../../domain/user/User';
+import { CreateUserDTO, UpdateUserDTO } from '../../application/user/dto/UserDTO';
 
 export class UserAdapter implements IUserRepository {
-  private repo: Repository<UserEntity>;
+  private repo = AppDataSource.getRepository(UserEntity);
 
-  constructor() {
-    this.repo = AppDataSource.getRepository(UserEntity);
-  }
-
-  private toDomain(entity: UserEntity): User {
+  private toDomain(entity: UserEntity & Partial<Record<'status' | 'createdAt' | 'updatedAt', any>>): User {
     return {
       id: entity.id,
       username: entity.username,
       email: entity.email,
       passwordHash: entity.passwordHash,
       rolId: entity.rolId,
-      status: entity.status,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
+      status: (entity as any).status ?? 1,
+      createdAt: (entity as any).createdAt ?? new Date(),
+      updatedAt: (entity as any).updatedAt ?? new Date(),
+      rolNombre: (entity as any).rolNombre,
     };
   }
 
-  private toEntity(dto: CreateUserDTO): UserEntity {
-    const entity = new UserEntity();
-    entity.username = dto.username;
-    entity.email = dto.email;
-    entity.passwordHash = dto.password; // hash se genera en Application
-    entity.rolId = dto.rolId ?? 1;
-    entity.status = dto.status ?? 1;
-    return entity;
-  }
-
   async findAll(): Promise<User[]> {
-    const users = await this.repo.find({ where: { status: 1 } });
-    return users.map(u => this.toDomain(u));
+    const entities = await this.repo.find();
+    return entities.map((e) => this.toDomain(e as any));
   }
 
   async findById(id: number): Promise<User | null> {
-    const user = await this.repo.findOne({ where: { id, status: 1 } });
-    return user ? this.toDomain(user) : null;
+    const found = await this.repo.findOne({ where: { id } });
+    return found ? this.toDomain(found as any) : null;
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    const user = await this.repo.findOne({ where: { email, status: 1 } });
-    return user ? this.toDomain(user) : null;
+    const found = await this.repo.findOne({ where: { email } });
+    return found ? this.toDomain(found as any) : null;
   }
 
-  async create(dto: CreateUserDTO): Promise<User> {
-    const entity = this.toEntity(dto);
-    const saved = await this.repo.save(entity);
-    return this.toDomain(saved);
-  }
+  async create(user: CreateUserDTO): Promise<User> {
 
-  async update(id: number, dto: UpdateUserDTO): Promise<User | null> {
-    const user = await this.repo.findOne({ where: { id, status: 1 } });
-    if (!user) return null;
-
-    Object.assign(user, {
-      username: dto.username ?? user.username,
-      email: dto.email ?? user.email,
-      passwordHash: dto.password ?? user.passwordHash,
-      rolId: dto.rolId ?? user.rolId,
-      status: dto.status ?? user.status,
+    const entity = this.repo.create({
+      username: user.username,
+      email: user.email,
+      passwordHash: user.password, 
+      rolId: user.rolId ?? 2,
     });
+    const saved = await this.repo.save(entity);
+    return this.toDomain(saved as any);
+  }
 
-    const updated = await this.repo.save(user);
-    return this.toDomain(updated);
+  async update(id: number, updates: UpdateUserDTO): Promise<User | null> {
+    const entity = await this.repo.findOne({ where: { id } });
+    if (!entity) return null;
+
+    if (updates.username !== undefined) entity.username = updates.username;
+    if (updates.email !== undefined) entity.email = updates.email;
+    if (updates.password !== undefined) entity.passwordHash = updates.password; 
+    if (updates.rolId !== undefined) entity.rolId = updates.rolId;
+
+    const saved = await this.repo.save(entity);
+    return this.toDomain(saved as any);
   }
 
   async delete(id: number): Promise<boolean> {
-    await this.repo.update(id, { status: 0 });
-    return true;
+    const res = await this.repo.delete(id);
+    return !!res.affected && res.affected > 0;
   }
 }

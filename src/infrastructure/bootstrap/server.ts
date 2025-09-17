@@ -7,9 +7,12 @@ import rolRoutes from "../routes/rol_routes";
 import notificacionRoutes from "../routes/notificacion_routes";
 import { ENV } from "../config/env";
 import { AppDataSource } from "../config/database"; // 👈 importa tu datasource
+import cors from "cors";
 
 const app = express();
-app.use(express.json());
+app.use(cors()); // Permite peticiones desde otros orígenes
+app.use(express.json()); // <-- Esto permite leer req.body
+
 
 // Rutas
 app.use("/usuarios", userRoutes);

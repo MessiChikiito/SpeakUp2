@@ -11,7 +11,7 @@ export class UserApplicationService {
     if (existing) throw new Error("Usuario ya existe");
 
     const hashedPassword = await bcrypt.hash(user.password, 10);
-    const created = await this.userRepository.create({ ...user, password: hashedPassword });
+    const created = await this.userRepository.create({ ...user, password: hashedPassword }); // <- password, no passwordHash
 
     return {
       id: created.id,
@@ -24,14 +24,24 @@ export class UserApplicationService {
     };
   }
 
-  async login(email: string, password: string): Promise<string> {
+  async login(email: string, password: string): Promise<{ token: string; user: UserDTO }> {
     const user = await this.userRepository.getUserByEmail(email);
     if (!user) throw new Error("Credenciales inválidas");
 
     const match = await bcrypt.compare(password, user.passwordHash);
     if (!match) throw new Error("Credenciales inválidas");
 
-    return AuthApplication.generateToken({ id: user.id, email: user.email, rol: user.rolId });
+    const token = AuthApplication.generateToken({ id: user.id, email: user.email, rol: user.rolId });
+    const dto: UserDTO = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      rolId: user.rolId,
+      status: user.status,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+    return { token, user: dto };
   }
 
   async getAll(): Promise<UserDTO[]> {
@@ -63,7 +73,7 @@ export class UserApplicationService {
 
   async update(id: number, updates: UpdateUserDTO): Promise<UserDTO | null> {
     if (updates.password) {
-      updates.password = await bcrypt.hash(updates.password, 10);
+      updates.password = await bcrypt.hash(updates.password, 10); // <- seguirá llegando como 'password'
     }
     const updated = await this.userRepository.update(id, updates);
     if (!updated) return null;

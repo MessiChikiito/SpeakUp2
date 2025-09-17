@@ -18,7 +18,7 @@ export class DenunciaEntity {
   ubicacion!: string;
 
   @Column({ type: "int" })
-  gravedad!: number;
+  gravedad!: number; 
 
   @Column({ type: "varchar", default: "pendiente" })
   estado!: string;
@@ -28,6 +28,18 @@ export class DenunciaEntity {
 
   @Column({ type: "int", default: 1 })
   status!: number;
+
+  @Column({ name: 'score', type: 'int', default: 0 })
+  score!: number;
+
+  @Column({ name: 'up_count', type: 'int', default: 0 })
+  upCount!: number;
+
+  @Column({ name: 'down_count', type: 'int', default: 0 })
+  downCount!: number;
+
+  @Column({ name: 'last_score_update', type: 'timestamp with time zone', nullable: true })
+  lastScoreUpdate?: Date;
 
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;

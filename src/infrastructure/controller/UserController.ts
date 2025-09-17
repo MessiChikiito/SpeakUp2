@@ -12,6 +12,7 @@ export class UserController {
       const user = await this.app.register(dto);
       return res.status(201).json({ message: "Usuario creado", user });
     } catch (err) {
+      console.error('Error en registro:', err);
       return res.status(500).json({ error: "Error al registrar usuario" });
     }
   };
@@ -19,9 +20,9 @@ export class UserController {
   loginUser = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { email, password } = req.body;
-      const token = await this.app.login(email, password);
-      return res.json({ token });
-    } catch {
+      const { token, user } = await this.app.login(email, password);
+      return res.json({ token, user });
+    } catch (e) {
       return res.status(401).json({ error: "Credenciales inválidas" });
     }
   };

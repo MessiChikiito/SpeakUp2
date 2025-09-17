@@ -1,17 +1,31 @@
 import { Request, Response, NextFunction } from "express";
-import { AuthApplication } from "../../application/user/AuthApplication";
+import jwt from "jsonwebtoken";
 
-export function authenticateToken(request: Request, response: Response, next: NextFunction) {
-  const authHeader = request.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
+// Debe coincidir con el utilizado en AuthApplication.ts
+const JWT_KEY = process.env.JWT_KEY || "HABIAUNAVEZUNPATOQUEIBACANTANDOALEGREMENTE";
 
-  if (!token) return response.status(401).json({ message: "Token requerido" });
+export interface AuthRequest extends Request {
+  user?: { id: number; role?: string };
+}
 
+export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Token requerido" });
+  }
+  const token = header.substring(7);
   try {
-    const user = AuthApplication.verifyToken(token);
-    (request as any).user = user; // guarda info del token en req para usar luego
+    const payload: any = jwt.verify(token, JWT_KEY);
+    console.log('[auth] payload user =>', payload);
+    // Mapeamos id (si el payload por alguna razón trae userId, lo aceptamos también)
+    const userId = payload.id ?? payload.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Token sin id de usuario" });
+    }
+    req.user = { id: userId, role: payload.role };
     next();
-  } catch (error) {
-    return response.status(403).json({ message: "Token inválido" });
+  } catch (err: any) {
+    console.error('[auth] token verify error:', err?.message);
+    return res.status(401).json({ error: "Token inválido" });
   }
 }

@@ -12,8 +12,20 @@ export class DenunciaApplicationService {
     return this.repo.findAll();
   }
 
+  async getAllRanked(sort: 'recent'|'top', userId?: number): Promise<DenunciaDTO[]> {
+    return this.repo.findAllRanked(sort, userId);
+  }
+
   async getById(id: number): Promise<DenunciaDTO | null> {
     return this.repo.findById(id);
+  }
+
+  async getByIdWithUser(id: number, userId?: number): Promise<DenunciaDTO | null> {
+    return this.repo.findByIdWithUser(id, userId);
+  }
+
+  async getByUser(userId: number) {
+    return this.repo.findByUser(userId);
   }
 
   async update(id: number, dto: UpdateDenunciaDTO): Promise<DenunciaDTO | null> {
@@ -26,5 +38,9 @@ export class DenunciaApplicationService {
 
   async validar(id: number): Promise<DenunciaDTO | null> {
     return this.repo.validar(id);
+  }
+
+  async vote(id: number, userId: number, value: -1 | 0 | 1) {
+    return this.repo.vote(id, userId, value);
   }
 }
