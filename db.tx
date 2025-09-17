@@ -1,101 +1,100 @@
--- Opcional: crear base
--- CREATE DATABASE speakup;
--- \c speakup;
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Roles / Perfiles de usuario
-CREATE TABLE rol (
-  id SERIAL PRIMARY KEY,
-  nombre VARCHAR(50) NOT NULL UNIQUE,
-  descripcion TEXT
+
+CREATE TABLE roles (
+  id_rol SERIAL PRIMARY KEY,
+  nombre_rol VARCHAR(50) NOT NULL UNIQUE,
+  descripcion_rol TEXT,
+  status_rol INTEGER DEFAULT 1
 );
 
--- Usuarios
-CREATE TABLE "user" (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+CREATE TABLE usuarios (
+  id SERIAL PRIMARY KEY,
   username VARCHAR(60) NOT NULL UNIQUE,
   email VARCHAR(120) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  role_id INTEGER REFERENCES rol(id) ON DELETE SET NULL,
-  creado_en TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
-  actualizado_en TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+  rol_id INTEGER REFERENCES roles(id_rol) ON DELETE SET NULL,
+  status INTEGER DEFAULT 1,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_user_role ON "user"(role_id);
+CREATE INDEX idx_usuarios_rol ON usuarios(rol_id);
 
--- Categorías
-CREATE TABLE categoria (
+
+CREATE TABLE categorias (
   id SERIAL PRIMARY KEY,
   nombre VARCHAR(120) NOT NULL UNIQUE,
   descripcion TEXT,
-  creado_en TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
-  actualizado_en TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+  status INTEGER DEFAULT 1,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Denuncias
-CREATE TABLE denuncia (
+
+CREATE TABLE denuncias (
   id SERIAL PRIMARY KEY,
   titulo VARCHAR(200) NOT NULL,
   descripcion TEXT NOT NULL,
-  categoria_id INTEGER REFERENCES categoria(id) ON DELETE SET NULL,
-  gravedad SMALLINT NOT NULL CHECK (gravedad BETWEEN 1 AND 4),
-  ubicacion VARCHAR(80),
-  estado VARCHAR(30) NOT NULL DEFAULT 'pendiente',  -- 'pendiente','validado','rechazado','revision'
-  user_id UUID REFERENCES "user"(id) ON DELETE SET NULL,
-  score INTEGER NOT NULL DEFAULT 0,
-  up_count INTEGER NOT NULL DEFAULT 0,
-  down_count INTEGER NOT NULL DEFAULT 0,
-  last_score_update TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
-  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+  categoria_id INTEGER REFERENCES categorias(id) ON DELETE SET NULL,
+  gravedad INTEGER NOT NULL,
+  ubicacion VARCHAR(255),
+  estado VARCHAR(30) NOT NULL DEFAULT 'pendiente',
+  usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+  status INTEGER DEFAULT 1,
+  score INTEGER DEFAULT 0,
+  up_count INTEGER DEFAULT 0,
+  down_count INTEGER DEFAULT 0,
+  last_score_update TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_denuncia_categoria ON denuncia(categoria_id);
-CREATE INDEX idx_denuncia_user ON denuncia(user_id);
-CREATE INDEX idx_denuncia_score ON denuncia(score DESC);
-CREATE INDEX idx_denuncia_created ON denuncia(created_at DESC);
+CREATE INDEX idx_denuncias_categoria ON denuncias(categoria_id);
+CREATE INDEX idx_denuncias_usuario ON denuncias(usuario_id);
+CREATE INDEX idx_denuncias_score ON denuncias(score DESC);
+CREATE INDEX idx_denuncias_created ON denuncias(created_at DESC);
 
--- Tabla de votos (composite PK)
+
 CREATE TABLE denuncia_vote (
-  denuncia_id INTEGER NOT NULL REFERENCES denuncia(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
-  value SMALLINT NOT NULL CHECK (value IN (-1, 1)),
-  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+  denuncia_id INTEGER NOT NULL REFERENCES denuncias(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  value INTEGER NOT NULL CHECK (value IN (-1, 1)),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
   PRIMARY KEY (denuncia_id, user_id)
 );
 
 CREATE INDEX idx_denuncia_vote_user ON denuncia_vote(user_id);
 CREATE INDEX idx_denuncia_vote_value ON denuncia_vote(value);
 
--- Logs
-CREATE TABLE log (
+
+CREATE TABLE logs (
   id BIGSERIAL PRIMARY KEY,
-  tipo VARCHAR(40) NOT NULL,     -- e.g. 'auth','error','action'
-  mensaje TEXT NOT NULL,
-  meta JSONB,
-  user_id UUID REFERENCES \"user\"(id) ON DELETE SET NULL,
-  creado_en TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+  usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+  accion VARCHAR(255) NOT NULL,
+  entidad VARCHAR(100) NOT NULL,
+  fecha TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_log_tipo ON log(tipo);
-CREATE INDEX idx_log_user ON log(user_id);
+CREATE INDEX idx_logs_usuario ON logs(usuario_id);
 
--- Notificaciones (si las usas)
-CREATE TABLE notificacion (
-  id BIGSERIAL PRIMARY KEY,
-  user_id UUID REFERENCES \"user\"(id) ON DELETE CASCADE,
-  titulo VARCHAR(150) NOT NULL,
-  cuerpo TEXT,
-  leida BOOLEAN NOT NULL DEFAULT FALSE,
-  creada_en TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+
+CREATE TABLE notificaciones (
+  id SERIAL PRIMARY KEY,
+  denuncia_id INTEGER REFERENCES denuncias(id) ON DELETE CASCADE,
+  moderador_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+  mensaje VARCHAR(255) NOT NULL,
+  leido BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_notificacion_user ON notificacion(user_id);
-CREATE INDEX idx_notificacion_leida ON notificacion(leida);
+CREATE INDEX idx_notificaciones_denuncia ON notificaciones(denuncia_id);
+CREATE INDEX idx_notificaciones_moderador ON notificaciones(moderador_id);
 
--- Disparadores (opcional) para updated_at
+
 CREATE OR REPLACE FUNCTION touch_updated_at() RETURNS trigger AS $$
 BEGIN
   NEW.updated_at = NOW();
@@ -104,20 +103,55 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_denuncia_updated
-BEFORE UPDATE ON denuncia
+BEFORE UPDATE ON denuncias
 FOR EACH ROW
 EXECUTE PROCEDURE touch_updated_at();
 
--- Roles seed
-INSERT INTO rol (nombre, descripcion) VALUES
-  ('usuario', 'Usuario estándar') ON CONFLICT DO NOTHING;
-INSERT INTO rol (nombre, descripcion) VALUES
-  ('admin', 'Administrador') ON CONFLICT DO NOTHING;
 
--- Usuario admin seed (cambia el hash luego)
--- password_hash debería ser un bcrypt real
-INSERT INTO \"user\" (username, email, password_hash, role_id)
-SELECT 'admin', 'admin@example.com', '$2b$10$reemplazar_hash_bcrypt', r.id
-FROM rol r
-WHERE r.nombre = 'admin'
+INSERT INTO roles (nombre_rol, descripcion_rol, status_rol) VALUES
+  ('Usuario', 'Usuario estándar', 1) ON CONFLICT DO NOTHING;
+INSERT INTO roles (nombre_rol, descripcion_rol, status_rol) VALUES
+  ('Admin', 'Administrador', 1) ON CONFLICT DO NOTHING;
+
+
+INSERT INTO usuarios (id, username, email, password_hash, rol_id, status)
+SELECT 1, 'admin', 'admin@example.com', '$2b$10$reemplazar_hash_bcrypt', r.id_rol, 1
+FROM roles r
+WHERE r.nombre_rol = 'Admin'
 ON CONFLICT (username) DO NOTHING;
+
+-- Usuarios de prueba
+INSERT INTO usuarios (id, username, email, password_hash, rol_id, status)
+SELECT 2, 'messi1', 'messi1@gmail.com', '$2b$10$w1Qw1Qw1Qw1Qw1Qw1Qw1Qe1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Q', r.id_rol, 1
+FROM roles r WHERE r.nombre_rol = 'Usuario' ON CONFLICT (username) DO NOTHING;
+INSERT INTO usuarios (id, username, email, password_hash, rol_id, status)
+SELECT 3, 'prueba1', 'prueba1@gmail.com', '$2b$10$w2Qw2Qw2Qw2Qw2Qw2Qw2Qe2Qw2Qw2Qw2Qw2Qw2Qw2Qw2Qw2Qw2Q', r.id_rol, 1
+FROM roles r WHERE r.nombre_rol = 'Usuario' ON CONFLICT (username) DO NOTHING;
+
+-- datos Categorías
+INSERT INTO categorias (id, nombre) VALUES
+  (1, 'Corrupción'),
+  (2, 'Abuso de poder'),
+  (3, 'Negligencia'),
+  (4, 'Fraude'),
+  (5, 'Discriminación'),
+  (6, 'Medio ambiente'),
+  (7, 'Acoso'),
+  (8, 'Seguridad'),
+  (9, 'Salud'),
+  (10, 'Transparencia')
+ON CONFLICT (id) DO NOTHING;
+
+-- Denuncias de prueba para messi1 (usuario_id=2)
+INSERT INTO denuncias (titulo, descripcion, categoria_id, gravedad, ubicacion, estado, usuario_id)
+VALUES
+('Corrupción en licitación', 'Se detectó corrupción en la licitación de obras públicas.', 1, 4, 'Oficina municipal', 'pendiente', 2),
+('Negligencia médica', 'Caso de negligencia en hospital local.', 3, 3, 'Hospital/Centro de salud', 'pendiente', 2),
+('Acoso laboral', 'Empleado reporta acoso por parte de su jefe.', 7, 2, 'Institución educativa', 'pendiente', 2);
+
+-- Denuncias de prueba para prueba1 (usuario_id=3)
+INSERT INTO denuncias (titulo, descripcion, categoria_id, gravedad, ubicacion, estado, usuario_id)
+VALUES
+('Fraude financiero', 'Sospecha de fraude en cuentas municipales.', 4, 4, 'Oficina municipal', 'pendiente', 3),
+('Discriminación en transporte', 'Discriminación a usuario en transporte público.', 5, 1, 'Transporte público', 'pendiente', 3),
+('Problemas ambientales', 'Contaminación en parque local.', 6, 2, 'Espacio público', 'pendiente', 3);
