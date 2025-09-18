@@ -18,6 +18,8 @@ app.use("/categorias", categoriaRoutes);
 app.use("/roles", rolRoutes);
 app.use("/notificaciones", notificacionRoutes);
 app.use("/logs", logRoutes);
+=======
+app.use("/log", logRoutes);
 app.use("/usuarios", userRoutes);
 app.use("/denuncias", denunciaRoutes);
 

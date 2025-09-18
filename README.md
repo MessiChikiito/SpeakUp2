@@ -77,6 +77,24 @@ npm test
 ```
 Incluye pruebas de transiciones de voto.
 
+## Análisis de calidad con SonarQube
+
+1. Configura el secret `SONAR_TOKEN` en el repositorio (token generado desde tu instancia de SonarQube/SonarCloud) y, si usas un host distinto a SonarCloud, define la variable `SONAR_HOST_URL`.
+2. Ejecuta el análisis localmente con:
+   ```
+   SONAR_TOKEN=xxxxxxxx npm run sonar
+   ```
+   El workflow de CI lanza el mismo comando y sólo se ejecuta cuando `SONAR_TOKEN` está presente.
+
+### Interpretación del reporte
+- **Quality Gate**: debe estar en estado `Passed`. Si está en `Failed`, consulta las métricas resaltadas como incumplidas.
+- **Cobertura** (`Coverage`): objetivo mínimo 80% en nuevo código. Revisa los archivos listados en la pestaña Coverage para priorizar pruebas adicionales.
+- **Bugs y Vulnerabilidades**: los issues de severidad `Blocker` o `Critical` deben resolverse antes de aprobar cambios.
+- **Code Smells**: acepta un máximo de deuda técnica equivalente a 5 minutos por archivo nuevo/modificado.
+- **Duplicaciones**: mantener el porcentaje de duplicación por debajo del 3% en los archivos modificados.
+
+Cumpliendo estas reglas mínimas el pipeline se mantendrá en verde y el proyecto conservará un estado saludable.
+
 ## Comentarios recomendados
 En `DenunciaAdapter.vote()` agregar referencia “Ver README sección Votos”. Eliminar comentarios viejos de “hotScore”.
 
