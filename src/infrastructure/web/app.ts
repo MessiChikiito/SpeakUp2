@@ -1,9 +1,7 @@
 
 import express, { type NextFunction, type Request, type Response } from "express";
-import bodyParser from "body-parser";
 import fs from "fs";
 import path from "path";
-import express from "express";
 import cors from "cors";
 import categoriaRoutes from "../routes/categoria_routes";
 import rolRoutes from "../routes/rol_routes";
@@ -22,7 +20,7 @@ interface RateLimiterOptions {
   windowMs: number;
   max: number;
   message?: any;
-  keyGenerator?: (req: Request) => string;
+  keyGenerator?: (req: Request) => string | undefined;
 }
 
 function createInMemoryRateLimiter(options: RateLimiterOptions) {
@@ -123,9 +121,6 @@ if (shouldExposeDocs) {
   }
 }
 
-app.listen(4000, () => {
-  console.log("Servidor corriendo en http://localhost:4000");
-=======
 app.get("/health", (_req, res) => {
   const payload: { status: string; database?: "connected" | "disconnected" } = {
     status: "ok",
