@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
-import { LogApplicationService } from "../../application/log/LogApplicationService";
+import {
+  FechaNoEditableError,
+  LogApplicationService,
+} from "../../application/log/LogApplicationService";
 import { LogAdapter } from "../adapter/LogAdapter";
 
 const logService = new LogApplicationService(new LogAdapter());
@@ -41,7 +44,13 @@ export class LogController {
         return response.status(400).json({ error: "ID inválido" });
       }
 
-      const { usuarioId, accion, entidad } = request.body ?? {};
+      const { usuarioId, accion, entidad, fecha } = request.body ?? {};
+
+      if (fecha !== undefined) {
+        return response
+          .status(400)
+          .json({ error: "El campo fecha no puede modificarse" });
+      }
       const updates: Partial<{ usuarioId: number; accion: string; entidad: string }> = {};
 
       if (usuarioId !== undefined) {
@@ -77,6 +86,12 @@ export class LogController {
 
       return response.status(200).json(updatedLog);
     } catch (err) {
+      if (err instanceof FechaNoEditableError) {
+        return response
+          .status(400)
+          .json({ error: "El campo fecha no puede modificarse" });
+      }
+
       return response.status(500).json({ error: "Error al actualizar log" });
     }
   }
