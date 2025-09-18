@@ -3,7 +3,7 @@ import bodyParser from "body-parser";
 import categoriaRoutes from "../routes/categoria_routes";
 import rolRoutes from "../routes/rol_routes";
 import notificacionRoutes from "../routes/notificacion_routes";
-import logRoutes from "../routes/rol_routes";
+import logRoutes from "../routes/log_routes";
 import userRoutes from "../routes/user_routes";
 import denunciaRoutes from "../routes/denuncia_routes";
 
@@ -14,7 +14,7 @@ app.use(bodyParser.json());
 app.use("/categorias", categoriaRoutes);
 app.use("/roles", rolRoutes);
 app.use("/notificaciones", notificacionRoutes);
-app.use("/log",logRoutes);
+app.use("/log", logRoutes);
 app.use("/usuarios", userRoutes);
 app.use("/denuncias", denunciaRoutes);
 
