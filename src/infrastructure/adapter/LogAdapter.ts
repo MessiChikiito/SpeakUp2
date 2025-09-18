@@ -35,6 +35,27 @@ export class LogAdapter implements LogPort {
     return savedLog.id;
   }
 
+  async updateLog(
+    id: number,
+    log: Partial<Omit<Log, "id" | "fecha">>
+  ): Promise<Log | null> {
+    const existing = await this.logRepository.findOne({ where: { id } });
+    if (!existing) return null;
+
+    if (log.usuarioId !== undefined) {
+      existing.usuarioId = log.usuarioId;
+    }
+    if (log.accion !== undefined) {
+      existing.accion = log.accion;
+    }
+    if (log.entidad !== undefined) {
+      existing.entidad = log.entidad;
+    }
+
+    const saved = await this.logRepository.save(existing);
+    return this.toDomain(saved);
+  }
+
   async deleteLog(id: number): Promise<boolean> {
     const result = await this.logRepository.delete(id);
     return result.affected !== 0;
