@@ -1317,6 +1317,60 @@
           }
         }
       },
+      "put": {
+        "tags": ["Logs"],
+        "summary": "Actualizar log",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateLogInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Log actualizado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Log" }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos para actualizar log",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Log no encontrado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Error al actualizar log",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": ["Logs"],
         "summary": "Eliminar log",
@@ -1589,6 +1643,15 @@
           "entidad": { "type": "string" }
         },
         "required": ["usuarioId", "accion", "entidad"]
+      },
+      "UpdateLogInput": {
+        "type": "object",
+        "properties": {
+          "usuarioId": { "type": "integer", "format": "int64" },
+          "accion": { "type": "string" },
+          "entidad": { "type": "string" },
+          "fecha": { "type": "string", "format": "date-time" }
+        }
       },
       "LogCreatedResponse": {
         "type": "object",

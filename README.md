@@ -46,6 +46,13 @@ Denuncias:
 - GET /denuncias/:id
 - POST /denuncias/:id/vote  (value: -1 | 0 | 1)
 
+Logs:
+- GET /logs
+- POST /logs
+- GET /logs/:id
+- PUT /logs/:id *(actualiza campos editables como `accion`, `entidad`, `usuarioId` o `fecha`)*
+- DELETE /logs/:id
+
 ## Votos (resumen)
 Transiciones y efecto en score (ver tabla completa abajo):
 0→1 (+1), 1→0 (-1), 1→-1 (-2), etc.
