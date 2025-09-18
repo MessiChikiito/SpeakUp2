@@ -1,13 +1,13 @@
 import jwt from "jsonwebtoken";
+import { ENV } from "../../infrastructure/config/env";
 
-const JWT_KEY = process.env.JWT_KEY || "HABIAUNAVEZUNPATOQUEIBACANTANDOALEGREMENTE";
+const JWT_SECRET = ENV.JWT_SECRET;
 
 export class AuthApplication {
   static generateToken(payload: object): string {
-    return jwt.sign(payload, JWT_KEY, { expiresIn: "1h" });
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
   }
-
   static verifyToken(token: string): any {
-    return jwt.verify(token, JWT_KEY);
+    return jwt.verify(token, JWT_SECRET);
   }
 }

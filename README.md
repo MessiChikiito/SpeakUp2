@@ -19,6 +19,8 @@ NODE_ENV=development
 ```
 Puedes cambiar estos valores directamente sin pasos extra.
 
+> **Nota:** En producción (o cualquier entorno distinto a `development`) debes definir explícitamente `JWT_SECRET`; el valor anterior solo se usa como respaldo local.
+
 ## Instalación rápida
 ```
 npm install
