@@ -75,4 +75,22 @@ describe("LogController.update", () => {
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ error: "Log no encontrado" });
   });
+
+  test("debe rechazar intentos de modificar la fecha", async () => {
+    const req = {
+      params: { id: "4" },
+      body: { fecha: new Date().toISOString() },
+    } as unknown as Request;
+    const res = buildResponse();
+
+    const spy = jest.spyOn(LogApplicationService.prototype, "updateLog");
+
+    await LogController.update(req, res);
+
+    expect(spy).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      error: "El campo fecha no puede modificarse",
+    });
+  });
 });

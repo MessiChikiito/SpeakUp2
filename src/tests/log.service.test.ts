@@ -67,4 +67,11 @@ describe("Pruebas de LogApplicationService", () => {
     expect(mockRepo.updateLog).toHaveBeenCalledWith(99, { accion: "No existe" });
     expect(result).toBeNull();
   });
+
+  test("Debe rechazar la modificación de la fecha", async () => {
+    await expect(
+      service.updateLog(5, { fecha: new Date() } as unknown as any)
+    ).rejects.toThrow("El campo fecha no puede modificarse");
+    expect(mockRepo.updateLog).not.toHaveBeenCalled();
+  });
 });

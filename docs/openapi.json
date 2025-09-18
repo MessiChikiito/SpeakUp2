@@ -1649,8 +1649,7 @@
         "properties": {
           "usuarioId": { "type": "integer", "format": "int64" },
           "accion": { "type": "string" },
-          "entidad": { "type": "string" },
-          "fecha": { "type": "string", "format": "date-time" }
+          "entidad": { "type": "string" }
         }
       },
       "LogCreatedResponse": {

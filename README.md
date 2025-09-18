@@ -50,7 +50,7 @@ Logs:
 - GET /logs
 - POST /logs
 - GET /logs/:id
-- PUT /logs/:id *(actualiza campos editables como `accion`, `entidad`, `usuarioId` o `fecha`)*
+- PUT /logs/:id *(actualiza campos editables como `accion`, `entidad` o `usuarioId`)*
 - DELETE /logs/:id
 
 ## Votos (resumen)
