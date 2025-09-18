@@ -26,6 +26,15 @@ npm run dev
 ```
 Si la DB está vacía y usas sincronización automática se crearán las tablas.
 
+## Documentación
+- Documentación OpenAPI: [http://localhost:4000/docs](http://localhost:4000/docs) (disponible cuando `NODE_ENV` no es `production`).
+- Especificación en bruto: [`docs/openapi.json`](docs/openapi.json).
+
+### Cómo actualizar la especificación
+1. Ajusta los endpoints y esquemas en `docs/openapi.json` para reflejar cualquier cambio en los controladores o rutas.
+2. Valida el archivo con tu herramienta preferida (por ejemplo `npx @apidevtools/swagger-cli validate docs/openapi.json`) para asegurar que la sintaxis sea correcta.
+3. Reinicia el servidor o recarga la página de documentación para ver los cambios.
+
 ## Endpoints principales
 Auth:
 - POST /usuarios/register
