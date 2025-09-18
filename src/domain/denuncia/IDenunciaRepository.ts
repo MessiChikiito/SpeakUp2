@@ -1,11 +1,20 @@
 import { DenunciaDTO, CreateDenunciaDTO, UpdateDenunciaDTO } from "../../application/denuncia/dto/DenunciaDTO";
  
+export interface PaginationOptions {
+  page: number;
+  pageSize: number;
+}
+
 export interface IDenunciaRepository {
   create(dto: CreateDenunciaDTO): Promise<DenunciaDTO>;
   findAll(): Promise<DenunciaDTO[]>;
   findById(id: number): Promise<DenunciaDTO | null>;
   /** Obtiene todas con ordenación (recent|top) y el voto del usuario si se pasa userId */
-  findAllRanked(sort: 'recent'|'top', userId?: number): Promise<DenunciaDTO[]>;
+  findAllRanked(
+    sort: 'recent' | 'top',
+    userId?: number,
+    pagination?: PaginationOptions
+  ): Promise<DenunciaDTO[]>;
   /** Obtiene una denuncia incluyendo userVote si userId presente */
   findByIdWithUser(id: number, userId?: number): Promise<DenunciaDTO | null>;
   update(id: number, dto: UpdateDenunciaDTO): Promise<DenunciaDTO | null>;

@@ -1,4 +1,4 @@
-import { IDenunciaRepository } from "../../domain/denuncia/IDenunciaRepository";
+import { IDenunciaRepository, PaginationOptions } from "../../domain/denuncia/IDenunciaRepository";
 import { DenunciaDTO, CreateDenunciaDTO, UpdateDenunciaDTO } from "./dto/DenunciaDTO";
 
 export class DenunciaApplicationService {
@@ -12,8 +12,12 @@ export class DenunciaApplicationService {
     return this.repo.findAll();
   }
 
-  async getAllRanked(sort: 'recent'|'top', userId?: number): Promise<DenunciaDTO[]> {
-    return this.repo.findAllRanked(sort, userId);
+  async getAllRanked(
+    sort: 'recent' | 'top',
+    userId?: number,
+    pagination?: PaginationOptions
+  ): Promise<DenunciaDTO[]> {
+    return this.repo.findAllRanked(sort, userId, pagination);
   }
 
   async getById(id: number): Promise<DenunciaDTO | null> {

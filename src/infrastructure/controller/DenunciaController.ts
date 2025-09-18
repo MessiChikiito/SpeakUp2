@@ -80,11 +80,37 @@ export class DenunciaController {
 
   static async getAll(req: Request, res: Response) {
     try {
-  const sort = (req.query.sort as string) || 'recent';
-  const validSort = ['recent','top'];
+      const sort = (req.query.sort as string) || 'recent';
+      const validSort = ['recent','top'];
       const finalSort = validSort.includes(sort) ? sort as any : 'recent';
+
+      const rawPage = req.query.page as string | undefined;
+      const rawPageSize = req.query.pageSize as string | undefined;
+
+      const page = rawPage === undefined ? 1 : Number.parseInt(rawPage, 10);
+      if (!Number.isInteger(page) || page < 1) {
+        return res.status(400).json({ error: 'page debe ser un entero mayor o igual a 1' });
+      }
+
+      const pageSize = rawPageSize === undefined ? 20 : Number.parseInt(rawPageSize, 10);
+      if (!Number.isInteger(pageSize) || pageSize < 1) {
+        return res.status(400).json({ error: 'pageSize debe ser un entero mayor o igual a 1' });
+      }
+      const safePageSize = Math.min(pageSize, 100);
+
       const userId = (req as any).user?.id || (req as any).auth?.userId || (req as any).userId;
-      const denuncias = await service.getAllRanked(finalSort, userId ? Number(userId) : undefined);
+      const denuncias = await service.getAllRanked(
+        finalSort,
+        userId ? Number(userId) : undefined,
+        { page, pageSize: safePageSize }
+      );
+
+      res.setHeader('X-Page', String(page));
+      res.setHeader('X-Page-Size', String(safePageSize));
+      if (safePageSize !== pageSize) {
+        res.setHeader('X-Page-Size-Limit', '100');
+      }
+
       res.json(denuncias);
     } catch (err) {
       console.error('Error obteniendo denuncias:', err);
