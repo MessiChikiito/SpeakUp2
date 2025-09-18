@@ -9,6 +9,7 @@ describe("Pruebas de LogApplicationService", () => {
   beforeEach(() => {
     mockRepo = {
       createLog: jest.fn(),
+      updateLog: jest.fn(),
       deleteLog: jest.fn(),
       getLogById: jest.fn(),
       getAllLogs: jest.fn(),
@@ -39,5 +40,31 @@ describe("Pruebas de LogApplicationService", () => {
 
     const log = await service.getLogById(1);
     expect(log?.accion).toBe("Creación de usuario");
+  });
+
+  test("Debe actualizar un log existente", async () => {
+    const updatedLog = {
+      id: 1,
+      usuarioId: 6,
+      accion: "Actualización de perfil",
+      entidad: "usuarios",
+      fecha: new Date(),
+    } as LogEntity;
+
+    (mockRepo.updateLog as jest.Mock).mockResolvedValue(updatedLog);
+
+    const result = await service.updateLog(1, { accion: "Actualización de perfil" });
+
+    expect(mockRepo.updateLog).toHaveBeenCalledWith(1, { accion: "Actualización de perfil" });
+    expect(result).toEqual(updatedLog);
+  });
+
+  test("Debe retornar null si el log a actualizar no existe", async () => {
+    (mockRepo.updateLog as jest.Mock).mockResolvedValue(null);
+
+    const result = await service.updateLog(99, { accion: "No existe" });
+
+    expect(mockRepo.updateLog).toHaveBeenCalledWith(99, { accion: "No existe" });
+    expect(result).toBeNull();
   });
 });

@@ -34,6 +34,53 @@ export class LogController {
     }
   }
 
+  static async update(request: Request, response: Response): Promise<Response> {
+    try {
+      const id = Number(request.params.id);
+      if (Number.isNaN(id)) {
+        return response.status(400).json({ error: "ID inválido" });
+      }
+
+      const { usuarioId, accion, entidad } = request.body ?? {};
+      const updates: Partial<{ usuarioId: number; accion: string; entidad: string }> = {};
+
+      if (usuarioId !== undefined) {
+        const parsedUsuarioId = Number(usuarioId);
+        if (Number.isNaN(parsedUsuarioId)) {
+          return response.status(400).json({ error: "usuarioId inválido" });
+        }
+        updates.usuarioId = parsedUsuarioId;
+      }
+
+      if (accion !== undefined) {
+        if (typeof accion !== "string" || !accion.trim()) {
+          return response.status(400).json({ error: "accion inválida" });
+        }
+        updates.accion = accion;
+      }
+
+      if (entidad !== undefined) {
+        if (typeof entidad !== "string" || !entidad.trim()) {
+          return response.status(400).json({ error: "entidad inválida" });
+        }
+        updates.entidad = entidad;
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return response.status(400).json({ error: "No hay datos para actualizar" });
+      }
+
+      const updatedLog = await logService.updateLog(id, updates);
+      if (!updatedLog) {
+        return response.status(404).json({ error: "Log no encontrado" });
+      }
+
+      return response.status(200).json(updatedLog);
+    } catch (err) {
+      return response.status(500).json({ error: "Error al actualizar log" });
+    }
+  }
+
   static async delete(request: Request, response: Response): Promise<Response> {
     try {
       const deleted = await logService.deleteLog(Number(request.params.id));

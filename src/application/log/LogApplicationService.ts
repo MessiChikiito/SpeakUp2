@@ -12,6 +12,13 @@ export class LogApplicationService {
     return this.port.createLog(log);
   }
 
+  async updateLog(
+    id: number,
+    log: Partial<Omit<Log, "id" | "fecha">>
+  ): Promise<Log | null> {
+    return this.port.updateLog(id, log);
+  }
+
   async deleteLog(id: number): Promise<boolean> {
     return this.port.deleteLog(id);
   }

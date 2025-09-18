@@ -1,14 +1,22 @@
+
 import express, { type NextFunction, type Request, type Response } from "express";
 import bodyParser from "body-parser";
+
+import express from "express";
+import cors from "cors";
+
 import categoriaRoutes from "../routes/categoria_routes";
 import rolRoutes from "../routes/rol_routes";
 import notificacionRoutes from "../routes/notificacion_routes";
-import logRoutes from "../routes/rol_routes";
+import logRoutes from "../routes/log_routes";
 import userRoutes from "../routes/user_routes";
 import denunciaRoutes from "../routes/denuncia_routes";
+import { AppDataSource } from "../config/database";
 
 const app = express();
-app.use(bodyParser.json());
+
+app.use(cors());
+app.use(express.json());
 
 interface RateLimiterOptions {
   windowMs: number;
@@ -72,9 +80,21 @@ app.use("/roles", rolRoutes);
 app.use("/notificaciones", notificacionRoutes);
 app.use("/log",logRoutes);
 app.use("/usuarios/login", loginLimiter);
+app.use("/logs", logRoutes);
+app.use("/log", logRoutes);
 app.use("/usuarios", userRoutes);
 app.use("/denuncias", denunciasLimiter, denunciaRoutes);
 
-app.listen(4000, () => {
-  console.log("Servidor corriendo en http://localhost:4000");
+app.get("/health", (_req, res) => {
+  const payload: { status: string; database?: "connected" | "disconnected" } = {
+    status: "ok",
+  };
+
+  if (typeof AppDataSource?.isInitialized === "boolean") {
+    payload.database = AppDataSource.isInitialized ? "connected" : "disconnected";
+  }
+
+  res.status(200).json(payload);
 });
+
+export default app;
