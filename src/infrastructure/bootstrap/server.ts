@@ -1,26 +1,6 @@
-import express from "express";
-import userRoutes from "../routes/user_routes";
-import denunciaRoutes from "../routes/denuncia_routes";
-import logRoutes from "../routes/log_routes";
-import categoriaRoutes from "../routes/categoria_routes";
-import rolRoutes from "../routes/rol_routes";
-import notificacionRoutes from "../routes/notificacion_routes";
 import { ENV } from "../config/env";
 import { AppDataSource } from "../config/database"; // 👈 importa tu datasource
-import cors from "cors";
-
-const app = express();
-app.use(cors()); // Permite peticiones desde otros orígenes
-app.use(express.json()); // <-- Esto permite leer req.body
-
-
-// Rutas
-app.use("/usuarios", userRoutes);
-app.use("/denuncias", denunciaRoutes);
-app.use("/logs", logRoutes);
-app.use("/categorias", categoriaRoutes);
-app.use("/roles", rolRoutes);
-app.use("/notificaciones", notificacionRoutes);
+import app from "../web/app";
 
 // Inicializa la conexión con la BD y luego arranca el server
 AppDataSource.initialize()
