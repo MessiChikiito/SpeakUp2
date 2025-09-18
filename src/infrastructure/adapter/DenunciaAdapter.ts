@@ -2,7 +2,7 @@ import { Repository } from "typeorm";
 import { DenunciaEntity } from '../entities/DenunciaEntity';
 import { AppDataSource } from '../config/database';
 import { CreateDenunciaDTO, UpdateDenunciaDTO } from '../../application/denuncia/dto/DenunciaDTO';
-import { IDenunciaRepository } from '../../domain/denuncia/IDenunciaRepository'; // nuevo import
+import { IDenunciaRepository, PaginationOptions } from '../../domain/denuncia/IDenunciaRepository'; // nuevo import
 import { AppDataSource as ds } from '../config/database';
 
 export class DenunciaAdapter implements IDenunciaRepository {
@@ -60,23 +60,31 @@ export class DenunciaAdapter implements IDenunciaRepository {
     return all.map(e => this.toDomain(e));
   }
 
-  async findAllRanked(sort: 'recent'|'top', userId?: number) {
+  async findAllRanked(sort: 'recent'|'top', userId?: number, pagination?: PaginationOptions) {
     let orderBy = 'd.created_at DESC';
     if (sort === 'top') orderBy = 'd.score DESC, d.id DESC';
+
+    const page = pagination?.page && pagination.page > 0 ? pagination.page : 1;
+    const pageSizeRaw = pagination?.pageSize && pagination.pageSize > 0 ? pagination.pageSize : 20;
+    const pageSize = Math.min(pageSizeRaw, 100);
+    const offset = (page - 1) * pageSize;
+
     const params: any[] = [];
     let userVoteSelect = '0 as "userVote"';
     if (userId) {
-      params.push(userId);
-      userVoteSelect = `COALESCE((SELECT v.value FROM denuncia_vote v WHERE v.denuncia_id = d.id AND v.user_id = $${params.length} LIMIT 1),0) as "userVote"`;
+      const userIdx = params.push(userId);
+      userVoteSelect = `COALESCE((SELECT v.value FROM denuncia_vote v WHERE v.denuncia_id = d.id AND v.user_id = $${userIdx} LIMIT 1),0) as "userVote"`;
     }
-    const sql = `SELECT 
+    const limitIdx = params.push(pageSize);
+    const offsetIdx = params.push(offset);
+    const sql = `SELECT
         d.id, d.titulo, d.descripcion, d.categoria_id as "categoriaId", d.ubicacion,
         d.gravedad, d.usuario_id as "usuarioId", d.estado, d.created_at as "createdAt", d.updated_at as "updatedAt",
         d.score, d.up_count as "upCount", d.down_count as "downCount", ${userVoteSelect}
       FROM denuncias d
       WHERE d.status=1
       ORDER BY ${orderBy}
-      LIMIT 200`;
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}`;
     const rows = await AppDataSource.query(sql, params);
     return rows.map((r: any) => ({
       id: r.id,

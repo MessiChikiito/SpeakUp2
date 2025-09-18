@@ -33,7 +33,7 @@ Auth:
 
 Denuncias:
 - POST /denuncias
-- GET /denuncias?sort=top|recent
+- GET /denuncias?sort=top|recent&page=1&pageSize=20 *(paginación opcional, page>=1, pageSize<=100)*
 - GET /denuncias/:id
 - POST /denuncias/:id/vote  (value: -1 | 0 | 1)
 
@@ -55,6 +55,12 @@ Referenciar sección “Transiciones de voto” al mantener la lógica.
 ## Listado / Ordenamiento
 - sort=top → score DESC, createdAt DESC
 - sort=recent (default) → createdAt DESC
+- `page` y `pageSize` permiten paginar resultados. Si `pageSize` supera 100 se ajusta automáticamente. Las cabeceras `X-Page` y `X-Page-Size` reflejan los valores efectivos.
+- Respuestas 200 del listado se cachean en memoria por 30 segundos (por usuario y parámetros) para aliviar carga.
+
+## Rate limiting
+- `/usuarios/login`: 10 intentos en una ventana de 15 minutos (respuesta 429 en exceso).
+- `/denuncias`: 120 solicitudes por minuto por origen para evitar abusos.
 
 ## Estructura relevante
 ```
