@@ -1,1 +1,5 @@
 node_modules/
+dist/
+# Ignore compiled JS if accidentally emitted into src
+src/**/*.js
+src/**/*.js.map

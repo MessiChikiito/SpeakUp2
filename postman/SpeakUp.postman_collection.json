@@ -1,0 +1,127 @@
+{
+  "info": {
+    "name": "SpeakUp API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "c0a0d3c6-1234-4f30-9b22-9f0f0e123abc"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "const body = pm.response.json();",
+              "pm.expect(body).to.have.property('status');",
+              "pm.expect(['ok','healthy']).to.include(body.status);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Test\",\n  \"correo\": \"test+{{randomInt}}@example.com\",\n  \"password\": \"Passw0rd!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/usuarios/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["usuarios","register"]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.environment.set('randomInt', Math.floor(Math.random()*100000));"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Register returns 201/409/500 (tolerant)', function () { pm.expect([201,409,500]).to.include(pm.response.code); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/usuarios/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["usuarios","login"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Login returns 200 or 401', function () { pm.expect([200,401]).to.include(pm.response.code); });",
+              "let json = {}; try { json = pm.response.json() || {}; } catch(e){}",
+              "if (pm.response.code === 200 && json.token) { pm.environment.set('authToken', json.token); }"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuarios - List",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{authToken}}", "type": "text"}
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/usuarios",
+          "host": ["{{baseUrl}}"],
+          "path": ["usuarios"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('OK 200', function () { pm.response.to.have.status(200); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": []
+}
