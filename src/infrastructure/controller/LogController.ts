@@ -45,34 +45,17 @@ export class LogController {
       }
 
       const { usuarioId, accion, entidad, fecha } = request.body ?? {};
-
       if (fecha !== undefined) {
         return response
           .status(400)
           .json({ error: "El campo fecha no puede modificarse" });
       }
-      const updates: Partial<{ usuarioId: number; accion: string; entidad: string }> = {};
 
-      if (usuarioId !== undefined) {
-        const parsedUsuarioId = Number(usuarioId);
-        if (Number.isNaN(parsedUsuarioId)) {
-          return response.status(400).json({ error: "usuarioId inválido" });
-        }
-        updates.usuarioId = parsedUsuarioId;
-      }
-
-      if (accion !== undefined) {
-        if (typeof accion !== "string" || !accion.trim()) {
-          return response.status(400).json({ error: "accion inválida" });
-        }
-        updates.accion = accion;
-      }
-
-      if (entidad !== undefined) {
-        if (typeof entidad !== "string" || !entidad.trim()) {
-          return response.status(400).json({ error: "entidad inválida" });
-        }
-        updates.entidad = entidad;
+      let updates: Partial<{ usuarioId: number; accion: string; entidad: string }>;
+      try {
+        updates = validateAndBuildUpdates({ usuarioId, accion, entidad });
+      } catch (validationErr: any) {
+        return response.status(400).json({ error: validationErr.message });
       }
 
       if (Object.keys(updates).length === 0) {
@@ -91,7 +74,6 @@ export class LogController {
           .status(400)
           .json({ error: "El campo fecha no puede modificarse" });
       }
-
       return response.status(500).json({ error: "Error al actualizar log" });
     }
   }
@@ -105,4 +87,36 @@ export class LogController {
       return response.status(500).json({ error: "Error al eliminar log" });
     }
   }
+}
+
+function validateAndBuildUpdates(data: {
+  usuarioId?: any;
+  accion?: any;
+  entidad?: any;
+}) {
+  const updates: Partial<{ usuarioId: number; accion: string; entidad: string }> = {};
+
+  if (data.usuarioId !== undefined) {
+    const parsedUsuarioId = Number(data.usuarioId);
+    if (Number.isNaN(parsedUsuarioId)) {
+      throw new Error("usuarioId inválido");
+    }
+    updates.usuarioId = parsedUsuarioId;
+  }
+
+  if (data.accion !== undefined) {
+    if (typeof data.accion !== "string" || !data.accion.trim()) {
+      throw new Error("accion inválida");
+    }
+    updates.accion = data.accion;
+  }
+
+  if (data.entidad !== undefined) {
+    if (typeof data.entidad !== "string" || !data.entidad.trim()) {
+      throw new Error("entidad inválida");
+    }
+    updates.entidad = data.entidad;
+  }
+
+  return updates;
 }
