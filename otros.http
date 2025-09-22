@@ -1,0 +1,202 @@
+
+@baseUrl = http://localhost:4000
+@TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJqdWFzc25AdGVzdC5jb20iLCJyb2wiOjEsImlhdCI6MTc1ODQ5OTM4OSwiZXhwIjoxNzU4NTAyOTg5fQ.XHkJl4z6NhJrnpRLE6Cx_HOfiPz7pIQKsEKFWvpJX2s
+
+
+### Registrar usuario
+POST {{baseUrl}}/usuarios/register
+Content-Type: application/json
+
+{
+  "username": "juan",
+  "email": "juassn@test.com",
+  "password": "123456",
+  "rolId": 1
+}
+
+### Login (obtener TOKEN)
+POST {{baseUrl}}/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "juassn@test.com",
+  "password": "123456"
+}
+
+### (3) Obtener todos los usuarios
+GET {{baseUrl}}/usuarios
+Authorization: Bearer {{TOKEN}}
+
+### (4) Obtener un usuario por ID
+GET {{baseUrl}}/usuarios/1
+Authorization: Bearer {{TOKEN}}
+
+### (5) Actualizar usuario
+PUT {{baseUrl}}/usuarios/1
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "username": "juan_modificado",
+  "email": "juan_mod@test.com"
+}
+
+### (6) Eliminar usuario (borrado lógico)
+DELETE {{baseUrl}}/usuarios/1
+Authorization: Bearer {{TOKEN}}
+
+
+
+
+### (1) Crear categoría
+POST {{baseUrl}}/categorias
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "nombre": "Vías públicas",
+  "descripcion": "Problemas en calles y carreteras"
+}
+
+### (2) Listar categorías
+GET {{baseUrl}}/categorias
+Authorization: Bearer {{TOKEN}}
+
+### (3) Actualizar categoría
+PUT {{baseUrl}}/categorias/1
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "nombre": "Transporte",
+  "descripcion": "Problemas relacionados al transporte"
+}
+
+### (4) Eliminar categoría
+DELETE {{baseUrl}}/categorias/1
+Authorization: Bearer {{TOKEN}}
+
+
+
+
+### (1) Crear denuncia
+POST {{baseUrl}}/denuncias
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+
+{
+  "titulo": "Bache peligroso",
+  "descripcion": "Hay un bache grande frente a la calle 123.",
+  "categoriaId": 2,
+  "ubicacion": "Calle 123",
+  "gravedad": 3
+}
+
+### (2) Listar todas las denuncias
+GET {{baseUrl}}/denuncias
+Authorization: Bearer {{TOKEN}}
+
+### (3) Obtener denuncia por ID
+GET {{baseUrl}}/denuncias/1
+Authorization: Bearer {{TOKEN}}
+
+### (4) Obtener mis denuncias
+GET {{baseUrl}}/denuncias/misDenuncias
+Authorization: Bearer {{TOKEN}}
+
+### (5) Actualizar denuncia
+PUT {{baseUrl}}/denuncias/1
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "titulo": "Bache reparado",
+  "descripcion": "El bache fue reparado",
+  "categoriaId": 1,
+  "ubicacion": "Calle 123",
+  "gravedad": 1
+}
+
+### (6) Eliminar denuncia
+DELETE {{baseUrl}}/denuncias/1
+Authorization: Bearer {{TOKEN}}
+
+
+
+
+
+### (1) Upvote
+POST {{baseUrl}}/denuncias/1/vote
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "value": 1
+}
+
+### (2) Downvote
+POST {{baseUrl}}/denuncias/1/vote
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "value": -1
+}
+
+### (3) Quitar voto (unvote)
+POST {{baseUrl}}/denuncias/1/vote
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "value": 0
+}
+
+
+
+
+
+### (1) Listar logs
+GET {{baseUrl}}/logs
+Authorization: Bearer {{TOKEN}}
+
+### (2) Actualizar log (ejemplo: cambiar acción)
+PUT {{baseUrl}}/logs/2
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "accion": "Cambio"
+}
+
+
+
+
+### (1) Crear rol
+POST {{baseUrl}}/roles
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "nombre": "Moderador",
+  "descripcion": "Valida denuncias"
+}
+
+### (2) Listar roles
+GET {{baseUrl}}/roles
+Authorization: Bearer {{TOKEN}}
+
+### (3) Actualizar rol
+PUT {{baseUrl}}/roles/1
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+  "nombre": "Admin",
+  "descripcion": "Control total"
+}
+
+### (4) Eliminar rol
+DELETE {{baseUrl}}/roles/1
+Authorization: Bearer {{TOKEN}}
