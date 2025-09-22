@@ -129,3 +129,21 @@ En `DenunciaAdapter.vote()` agregar referencia “Ver README sección Votos”. 
 4. Crear DB si no existe.
 5. `npm run dev`.
 6. (Opcional acceso LAN) cambiar `app.listen` a host `0.0.0.0` y abrir puerto 4000 en firewall.
+
+
+
+
+
+
+#Comandos para artillery:
+1. npm install -g artillery
+2. artillery run artillery.yml
+
+#Instalacion de K6:
+1. https://github.com/grafana/k6/releases
+2. k6-v1.2.3-windows-amd64.msi
+3. en un nuevo power shell:
+3.1. k6 version
+3.2. cd C:\Users\POWER\OneDrive\Documentos\SpeakUp\SpeakUp2
+3.3. k6 run load_test.js
+ 
